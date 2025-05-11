@@ -1,0 +1,10 @@
+{
+    "sword": {
+        "name": "Sword",
+        "delay": 15
+    },
+    "shotgun": {
+        "name": "Shotgun",
+        "delay": 20
+    }
+}
