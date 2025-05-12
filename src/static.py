@@ -38,6 +38,8 @@ class Arena:
 
         self.scale : int = 75
 
+        self.frozen : int = 0
+
     def saveGame(self):
         with open(self.path, "w") as savefile:
             json.dump(self.getSave(), savefile)
@@ -171,7 +173,13 @@ class Arena:
         self.player.getRoom().particles.append(particle)
         return particle
 
+    def freeze(self, duration : int):
+        self.frozen += duration
+
     def tick(self):
+        if self.frozen:
+            self.frozen -= 1
+            return
         self.player.tick()
         self.player.getRoom().tick()
         self.camera.tick()
@@ -573,6 +581,9 @@ class Entity:
 
 
     def tick_spider(self):
+        if not "cooldown" in self.meta.keys():
+            self.meta["cooldown"] = 0
+
         distance = math.sqrt(
             (self.x - self.arena.player.x) ** 2 + (self.y - self.arena.player.y) ** 2
         )
@@ -583,6 +594,39 @@ class Entity:
         if distance > 1:
             self.x += 0.05 * math.cos(angle)
             self.y += 0.05 * math.sin(angle)
+
+        if self.meta["cooldown"] > 0:
+            self.meta["cooldown"] -= 1
+
+        if distance < 4:
+            if self.meta["cooldown"] == 0:
+                self.arena.newEntity(
+                    "web",
+                    self.x, self.y,
+                    angle = angle * 180 / math.pi,
+                    velocity = 0.15,
+                )
+                self.meta["cooldown"] = FRAMERATE * 2
+
+
+    def tick_web(self):
+        self.x += self.meta.get("velocity", 0.15) * math.cos(self.meta.get("angle", 0) / 180 * math.pi)
+        self.y += self.meta.get("velocity", 0.15) * math.sin(self.meta.get("angle", 0) / 180 * math.pi)
+
+        distance = math.sqrt((self.x - self.arena.player.x) ** 2 + (self.y - self.arena.player.y) ** 2)
+        if distance <= (self.arena.player.w + self.arena.player.h) / 2:
+            self.arena.player.damage(1)
+            self.arena.player.knockback(0.15, self.meta.get("angle", 0), FRAMERATE // 8)
+            self.destroy = True
+
+        if self.timer >= self.meta.get("duration", FRAMERATE // 4):
+            self.destroy = True
+
+        for block in self.arena.player.getRoom().layout:
+            if block.x - block.w / 2 < self.x < block.x + block.w / 2:
+                if block.y - block.h / 2 < self.y < block.y + block.h / 2:
+                    self.destroy = True
+                    break
 
 
     def tick_bullet(self):
@@ -640,7 +684,10 @@ class Entity:
 
 
     def damage_methane_can(self, amount : int):
-        self.meta["timer"] = FRAMERATE * 2
+        if self.meta["timer"] == 0:
+            self.meta["timer"] = FRAMERATE * 2
+        # else:
+            # self.meta["timer"] //= 2
 
     def tick_methane_can(self):
         if not "timer" in self.meta.keys():

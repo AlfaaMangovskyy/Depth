@@ -62,8 +62,8 @@ while running:
                 )
                 for entity in arena.player.getRoom().entities:
                     if not entity.interactable: continue
-                    distance = math.sqrt((entity.x - point[0]) ** 2 + (entity.y - point[1]) ** 2)
-                    if distance > 3.2: continue
+                    distance = math.sqrt((arena.player.x - point[0]) ** 2 + (arena.player.y - point[1]) ** 2)
+                    if distance > 7: continue
                     if entity.x - entity.w / 2 <= point[0] <= entity.x + entity.w / 2:
                         if entity.y - entity.h / 2 <= point[1] <= entity.y + entity.h / 2:
                             entity.interact()
@@ -84,6 +84,16 @@ while running:
     camX, camY = arena.camera.get()
 
     screen.fill("#030303")
+
+    for x in range(arena.player.getRoom().w):
+        for y in range(arena.player.getRoom().h):
+            img = IMAGES.get("tile_base")
+            screen.blit(
+                img, (
+                    (x - arena.player.getRoom().w / 2 - camX) * arena.scale + WIDTH // 2,
+                    (y - arena.player.getRoom().h / 2 - camY) * arena.scale + HEIGHT // 2,
+                )
+            )
 
     for block in arena.player.getRoom().layout:
         pygame.draw.rect(
@@ -129,7 +139,7 @@ while running:
 
         key = entity.animate()
 
-        print(entity.id, entity.destroyTimer)
+        # print(entity.id, entity.destroyTimer) #
         if entity.destroyTimer > FRAMERATE // 2:
             if f"knockout_{entity.id}" in IMAGES.keys():
                 key = f"knockout_{entity.id}"
@@ -205,8 +215,8 @@ while running:
     )
     for entity in arena.player.getRoom().entities:
         if not entity.interactable: continue
-        distance = math.sqrt((entity.x - point[0]) ** 2 + (entity.y - point[1]) ** 2)
-        if distance > 3.2: continue
+        distance = math.sqrt((arena.player.x - point[0]) ** 2 + (arena.player.y - point[1]) ** 2)
+        if distance > 7: continue
         if entity.x - entity.w / 2 <= point[0] <= entity.x + entity.w / 2:
             if entity.y - entity.h / 2 <= point[1] <= entity.y + entity.h / 2:
                 img = IMAGES.get("aim_interact")
