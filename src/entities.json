@@ -1,7 +1,33 @@
 {
     "spider": {
         "name": "Spider",
-        "w": 0.5,
-        "h": 0.5
+        "max_hp": 3,
+        "w": 0.50,
+        "h": 0.50
+    },
+    "bullet": {
+        "name": "Bullet",
+        "damage": false,
+        "w": 0.25,
+        "h": 0.25
+    },
+    "flameball": {
+        "name": "Flameball",
+        "damage": false,
+        "w": 0.50,
+        "h": 0.50
+    },
+    "methane_can": {
+        "name": "Methane Can",
+        "max_hp": 100,
+        "w": 0.75,
+        "h": 0.75
+    },
+    "item": {
+        "name": "Item",
+        "damage": false,
+        "interact": true,
+        "w": 0.75,
+        "h": 0.75
     }
 }

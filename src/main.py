@@ -22,8 +22,11 @@ IMAGES = {
 }
 
 arena = Arena("src/gsave.json")
+# arena.newEntity("methane_can", 4, 4)
+# arena.newEntity("item", 4, 4, item_id = "sword")
 arena.saveGame()
-arena.camera.shake(0.5, FRAMERATE * 2)
+# arena.camera.shake(0.5, FRAMERATE * 2)
+# arena.flash(2, 2, 120, 10)
 
 running = True
 while running:
@@ -32,6 +35,7 @@ while running:
     mouseAngle = math.atan2(
         mouseY - HEIGHT // 2, mouseX - WIDTH // 2,
     )
+    camX, camY = arena.camera.get()
 
     for e in pygame.event.get():
 
@@ -41,6 +45,28 @@ while running:
                 running = False
                 pygame.quit()
                 break
+
+        if e.type == pygame.MOUSEBUTTONDOWN:
+
+            if e.button == 1:
+                if arena.player.item:
+                    arena.player.item.apply((
+                        ((mouseX - WIDTH / 2) / arena.scale) + camX,
+                        ((mouseY - HEIGHT / 2) / arena.scale) + camY,
+                    ))
+
+            elif e.button == 3:
+                point = (
+                    ((mouseX - WIDTH / 2) / arena.scale) + camX,
+                    ((mouseY - HEIGHT / 2) / arena.scale) + camY,
+                )
+                for entity in arena.player.getRoom().entities:
+                    if not entity.interactable: continue
+                    distance = math.sqrt((entity.x - point[0]) ** 2 + (entity.y - point[1]) ** 2)
+                    if distance > 3.2: continue
+                    if entity.x - entity.w / 2 <= point[0] <= entity.x + entity.w / 2:
+                        if entity.y - entity.h / 2 <= point[1] <= entity.y + entity.h / 2:
+                            entity.interact()
 
     if not running: break
 
@@ -83,6 +109,8 @@ while running:
     if arena.player.item:
 
         img = IMAGES.get(f"item_{arena.player.item.id}")
+        if math.cos(mouseAngle) < 0:
+            img = pygame.transform.flip(img, 1, 0)
         img = pygame.transform.rotate(img, -90)
         img = pygame.transform.rotate(img, mouseAngle * 180 / math.pi)
         img = pygame.transform.flip(img, 0, 1)
@@ -100,6 +128,42 @@ while running:
     for entity in arena.player.getRoom().entities:
 
         key = entity.animate()
+
+        print(entity.id, entity.destroyTimer)
+        if entity.destroyTimer > FRAMERATE // 2:
+            if f"knockout_{entity.id}" in IMAGES.keys():
+                key = f"knockout_{entity.id}"
+
+        elif 1 <= entity.destroyTimer <= FRAMERATE // 2:
+            # print(
+            #         (entity.x - camX) * arena.scale + WIDTH // 2,
+            #         (entity.y - camY) * arena.scale + HEIGHT // 2,
+            #     )
+            delta = (FRAMERATE // 2 - entity.destroyTimer) / (FRAMERATE // 2) * 10
+            pygame.draw.circle(
+                screen, "#FFFFFF", (
+                    (entity.x - camX) * arena.scale + WIDTH // 2,
+                    (entity.y - camY - delta) * arena.scale + HEIGHT // 2,
+                ), (entity.w + entity.h) / 4 * arena.scale,
+            )
+            pygame.draw.polygon(
+                screen, "#FFFFFF", (
+                    (
+                        (entity.x - camX - entity.w / 2) * arena.scale + WIDTH // 2,
+                        (entity.y - camY - delta) * arena.scale + HEIGHT // 2,
+                    ),
+                    (
+                        (entity.x - camX + entity.w / 2) * arena.scale + WIDTH // 2,
+                        (entity.y - camY - delta) * arena.scale + HEIGHT // 2,
+                    ),
+                    (
+                        (entity.x - camX) * arena.scale + WIDTH // 2,
+                        (entity.y - camY + entity.h * 2 - delta) * arena.scale + HEIGHT // 2,
+                    ),
+                )
+            )
+            continue
+
         img = IMAGES.get(key)
         screen.blit(
             img, (
@@ -118,9 +182,35 @@ while running:
             )
         )
 
+    for light in arena.player.getRoom().light:
+
+        lim = IMAGES.get("light")
+        alpha = round((light.lum / 120) * 255)
+        lim.set_alpha(alpha)
+
+        screen.blit(
+            lim, (
+                (light.x - camX) * arena.scale + WIDTH // 2 - lim.get_width() // 2,
+                (light.y - camY) * arena.scale + HEIGHT // 2 - lim.get_height() // 2,
+            )
+        )
+
 
 
     img = IMAGES.get("aim")
+
+    point = (
+        ((mouseX - WIDTH / 2) / arena.scale) + camX,
+        ((mouseY - HEIGHT / 2) / arena.scale) + camY,
+    )
+    for entity in arena.player.getRoom().entities:
+        if not entity.interactable: continue
+        distance = math.sqrt((entity.x - point[0]) ** 2 + (entity.y - point[1]) ** 2)
+        if distance > 3.2: continue
+        if entity.x - entity.w / 2 <= point[0] <= entity.x + entity.w / 2:
+            if entity.y - entity.h / 2 <= point[1] <= entity.y + entity.h / 2:
+                img = IMAGES.get("aim_interact")
+
     screen.blit(
         img, (
             mouseX - img.get_width() // 2,
