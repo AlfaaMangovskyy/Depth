@@ -96,15 +96,75 @@ while running:
             )
 
     for block in arena.player.getRoom().layout:
+        # pygame.draw.rect(
+        #     screen, "#FFFFFF",
+        #     (
+        #         (block.x - block.w / 2 - camX) * arena.scale + WIDTH // 2,
+        #         (block.y - block.h / 2 - camY) * arena.scale + HEIGHT // 2,
+        #         block.w * arena.scale,
+        #         block.h * arena.scale,
+        #     )
+        # )
+        for dx in range(math.floor(block.w)):
+            for dy in range(math.floor(block.h)):
+                img = IMAGES.get("tile_ceil")
+                screen.blit(
+                    img, (
+                        (block.x + dx - block.w / 2 - camX) * arena.scale + WIDTH // 2,
+                        (block.y + dy - block.h / 2 - camY) * arena.scale + HEIGHT // 2,
+                    )
+                )
+
+        # for dx in range(math.floor(block.w)):
+        #     # print(block.y + dy - block.h / 2 - 1, arena.player.getRoom().h / 2)
+        #     if block.y + dy - 1 != arena.player.getRoom().h / 2:
+        #         img = IMAGES.get("tile_wall_front")
+        #         screen.blit(
+        #             img, (
+        #                 (block.x + dx - block.w / 2 - camX) * arena.scale + WIDTH // 2,
+        #                 (block.y + dy - block.h / 2 - camY) * arena.scale + HEIGHT // 2,
+        #             )
+        #         )
+
+        # if block.y + dy - 1 != arena.player.getRoom().h / 2:
+        #     pygame.draw.rect(
+        #         screen, "#FFFF00",
+        #         (
+        #             (block.x - block.w / 2 - camX) * arena.scale + WIDTH // 2,
+        #             (block.y - block.h / 2 - camY) * arena.scale + HEIGHT // 2,
+        #             block.w * arena.scale,
+        #             (block.h - 1) * arena.scale + 4,
+        #         ), 4,
+        #     )
+        # else:
+        #     pygame.draw.rect(
+        #         screen, "#FFFF00",
+        #         (
+        #             (block.x - block.w / 2 - camX) * arena.scale + WIDTH // 2,
+        #             (block.y - block.h / 2 - camY) * arena.scale + HEIGHT // 2,
+        #             block.w * arena.scale,
+        #             block.h * arena.scale,
+        #         ), 4,
+        #     )
         pygame.draw.rect(
-            screen, "#FFFFFF",
+            screen, "#FFFF00",
             (
                 (block.x - block.w / 2 - camX) * arena.scale + WIDTH // 2,
                 (block.y - block.h / 2 - camY) * arena.scale + HEIGHT // 2,
                 block.w * arena.scale,
                 block.h * arena.scale,
-            )
+            ), 4,
         )
+
+    pygame.draw.rect(
+        screen, "#030303",
+        (
+            (-arena.player.getRoom().w / 2 - camX) * arena.scale + WIDTH // 2 - 2,
+            (-arena.player.getRoom().h / 2 - camY) * arena.scale + HEIGHT // 2 - 2,
+            arena.player.getRoom().w * arena.scale + 4,
+            arena.player.getRoom().h * arena.scale + 4,
+        ), 8,
+    )
 
     pygame.draw.rect(
         screen, "#FFFFFF",
@@ -116,7 +176,7 @@ while running:
         )
     )
 
-    if arena.player.item:
+    if arena.player.item != None:
 
         img = IMAGES.get(f"item_{arena.player.item.id}")
         if math.cos(mouseAngle) < 0:
@@ -204,6 +264,84 @@ while running:
                 (light.y - camY) * arena.scale + HEIGHT // 2 - lim.get_height() // 2,
             )
         )
+
+    if arena.transtimer > 0:
+
+        if arena.transdir == 0:
+
+            if arena.transtimer > FRAMERATE // 4:
+                mul = (arena.transtimer - FRAMERATE // 4) / (FRAMERATE // 4)
+                pygame.draw.rect(
+                    screen, "#000000",
+                    (
+                        0, HEIGHT * mul, WIDTH, HEIGHT - HEIGHT * mul,
+                    )
+                )
+            else:
+                mul = arena.transtimer / (FRAMERATE // 4)
+                pygame.draw.rect(
+                    screen, "#000000",
+                    (
+                        0, 0, WIDTH, HEIGHT * mul,
+                    )
+                )
+
+        elif arena.transdir == 2:
+
+            if arena.transtimer > FRAMERATE // 4:
+                mul = (arena.transtimer - FRAMERATE // 4) / (FRAMERATE // 4)
+                pygame.draw.rect(
+                    screen, "#000000",
+                    (
+                        0, 0, WIDTH, HEIGHT - HEIGHT * mul,
+                    )
+                )
+            else:
+                mul = arena.transtimer / (FRAMERATE // 4)
+                pygame.draw.rect(
+                    screen, "#000000",
+                    (
+                        0, HEIGHT - HEIGHT * mul, WIDTH, HEIGHT * mul,
+                    )
+                )
+
+        elif arena.transdir == 1:
+
+            if arena.transtimer > FRAMERATE // 4:
+                mul = (arena.transtimer - FRAMERATE // 4) / (FRAMERATE // 4)
+                pygame.draw.rect(
+                    screen, "#000000",
+                    (
+                        0, 0, WIDTH - WIDTH * mul, HEIGHT,
+                    )
+                )
+            else:
+                mul = arena.transtimer / (FRAMERATE // 4)
+                pygame.draw.rect(
+                    screen, "#000000",
+                    (
+                        WIDTH - WIDTH * mul, 0, WIDTH * mul, HEIGHT,
+                    )
+                )
+
+        elif arena.transdir == 3:
+
+            if arena.transtimer > FRAMERATE // 4:
+                mul = (arena.transtimer - FRAMERATE // 4) / (FRAMERATE // 4)
+                pygame.draw.rect(
+                    screen, "#000000",
+                    (
+                        WIDTH * mul, 0, WIDTH - WIDTH * mul, HEIGHT,
+                    )
+                )
+            else:
+                mul = arena.transtimer / (FRAMERATE // 4)
+                pygame.draw.rect(
+                    screen, "#000000",
+                    (
+                        0, 0, WIDTH * mul, HEIGHT,
+                    )
+                )
 
 
 

@@ -5,21 +5,30 @@
         "w": 0.50,
         "h": 0.50
     },
+    "explosive_spider": {
+        "name": "Explosive Spider",
+        "max_hp": 100,
+        "w": 0.50,
+        "h": 0.50
+    },
     "bullet": {
         "name": "Bullet",
         "damage": false,
+        "temporary": true,
         "w": 0.25,
         "h": 0.25
     },
     "web": {
         "name": "Web",
         "damage": false,
+        "temporary": true,
         "w": 0.25,
         "h": 0.25
     },
     "flameball": {
         "name": "Flameball",
         "damage": false,
+        "temporary": true,
         "w": 0.50,
         "h": 0.50
     },
