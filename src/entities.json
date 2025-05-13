@@ -1,12 +1,14 @@
 {
     "spider": {
         "name": "Spider",
+        "opponent": true,
         "max_hp": 8,
         "w": 0.50,
         "h": 0.50
     },
     "explosive_spider": {
         "name": "Explosive Spider",
+        "opponent": true,
         "max_hp": 100,
         "w": 0.50,
         "h": 0.50
@@ -44,5 +46,17 @@
         "interact": true,
         "w": 0.75,
         "h": 0.75
+    },
+    "barricade": {
+        "name": "Barricade",
+        "damage": false,
+        "w": 0.75,
+        "h": 0.75
+    },
+    "dungeon_chest": {
+        "name": "Dungeon Chest",
+        "hp": 10000000,
+        "w": 1.4,
+        "h": 1.4
     }
 }

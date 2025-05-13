@@ -28,6 +28,9 @@ arena.saveGame()
 # arena.camera.shake(0.5, FRAMERATE * 2)
 # arena.flash(2, 2, 120, 10)
 
+mouseL = False
+mouseR = False
+
 running = True
 while running:
 
@@ -49,6 +52,7 @@ while running:
         if e.type == pygame.MOUSEBUTTONDOWN:
 
             if e.button == 1:
+                mouseL = True
                 if arena.player.item:
                     arena.player.item.apply((
                         ((mouseX - WIDTH / 2) / arena.scale) + camX,
@@ -56,6 +60,7 @@ while running:
                     ))
 
             elif e.button == 3:
+                mouseR = True
                 point = (
                     ((mouseX - WIDTH / 2) / arena.scale) + camX,
                     ((mouseY - HEIGHT / 2) / arena.scale) + camY,
@@ -68,7 +73,22 @@ while running:
                         if entity.y - entity.h / 2 <= point[1] <= entity.y + entity.h / 2:
                             entity.interact()
 
+        if e.type == pygame.MOUSEBUTTONUP:
+
+            if e.button == 1:
+                mouseL = False
+
+            elif e.button == 3:
+                mouseR = False
+
     if not running: break
+
+    if mouseL:
+        if arena.player.item:
+            arena.player.item.dapply((
+                ((mouseX - WIDTH / 2) / arena.scale) + camX,
+                ((mouseY - HEIGHT / 2) / arena.scale) + camY,
+            ))
 
     keymap = pygame.key.get_pressed()
     if keymap[pygame.K_w]:
@@ -180,8 +200,9 @@ while running:
 
         img = IMAGES.get(f"item_{arena.player.item.id}")
         if math.cos(mouseAngle) < 0:
-            img = pygame.transform.flip(img, 1, 0)
-        img = pygame.transform.rotate(img, -90)
+            img = pygame.transform.flip(img, 0, 1)
+        img = pygame.transform.rotate(img, 180)
+        # img = pygame.transform.rotate(img, -90) #
         img = pygame.transform.rotate(img, mouseAngle * 180 / math.pi)
         img = pygame.transform.flip(img, 0, 1)
 

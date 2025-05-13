@@ -180,6 +180,12 @@ class Arena:
     def freeze(self, duration : int):
         self.frozen += duration
 
+    def countOpponents(self) -> int:
+        count = 0
+        for entity in self.player.getRoom().entities:
+            if entity.opponent: count += 1
+        return count
+
     def tick(self):
 
         if self.transtimer > 0:
@@ -266,7 +272,14 @@ class Arena:
 
     def generateRoom(self, rx : int, ry : int):
 
-        return self.generateRoomPassage(rx, ry)
+        chance = random.randint(1, 100)
+
+        if chance <= 75:
+            room = self.generateRoomPassage(rx, ry)
+        else:
+            room = self.generateRoomDungeon(rx, ry)
+
+        return room
 
     def generateRoomPassage(self, rx : int, ry : int):
 
@@ -352,6 +365,105 @@ class Arena:
 
         if random.randint(1, 3) == 1:
             room.layout.append(Block(self, 0, 0, 3, 3))
+
+
+        return room
+
+
+    def generateRoomDungeon(self, rx : int, ry : int):
+
+        room = Room(
+            self,
+            rx, ry,
+            30, 30,
+            [], [], [],
+        )
+
+        room.layout.append(Block(self, -13, -13, 4, 4))
+        room.layout.append(Block(self, 13, -13, 4, 4))
+        room.layout.append(Block(self, -13, 13, 4, 4))
+        room.layout.append(Block(self, 13, 13, 4, 4))
+
+        find = self.getRoom(rx, ry - 1)
+        if find:
+            # print(f"ROOM {rx} {ry - 1} FOUND : room.ew = {find.es}") #
+            room.ew = find.es
+        else:
+            if random.randint(1, 3) == 1:
+                room.ew = False
+            else:
+                room.ew = True
+
+        find = self.getRoom(rx - 1, ry)
+        if find:
+            room.ea = find.ed
+        else:
+            if random.randint(1, 3) == 1:
+                room.ea = False
+            else:
+                room.ea = True
+
+        find = self.getRoom(rx, ry + 1)
+        if find:
+            room.es = find.ew
+        else:
+            if random.randint(1, 3) == 1:
+                room.es = False
+            else:
+                room.es = True
+
+        find = self.getRoom(rx + 1, ry)
+        if find:
+            room.ed = find.ea
+        else:
+            if random.randint(1, 3) == 1:
+                room.ed = False
+            else:
+                room.ed = True
+
+
+        if room.ew:
+            room.layout.append(Block(self, -6, -13, 10, 4))
+            room.layout.append(Block(self, 6, -13, 10, 4))
+            room.entities.append(Entity(self, "barricade", -1, -room.h / 2))
+            room.entities.append(Entity(self, "barricade", 0, -room.h / 2))
+            room.entities.append(Entity(self, "barricade", 1, -room.h / 2))
+        else:
+            room.layout.append(Block(self, 0, -13, 22, 4))
+
+        if room.es:
+            room.layout.append(Block(self, -6, 13, 10, 4))
+            room.layout.append(Block(self, 6, 13, 10, 4))
+            room.entities.append(Entity(self, "barricade", -1, room.h / 2))
+            room.entities.append(Entity(self, "barricade", 0, room.h / 2))
+            room.entities.append(Entity(self, "barricade", 1, room.h / 2))
+        else:
+            room.layout.append(Block(self, 0, 13, 22, 4))
+
+        if room.ea:
+            room.layout.append(Block(self, -13, -6, 4, 10))
+            room.layout.append(Block(self, -13, 6, 4, 10))
+            room.entities.append(Entity(self, "barricade", -room.w / 2, -1))
+            room.entities.append(Entity(self, "barricade", -room.w / 2, 0))
+            room.entities.append(Entity(self, "barricade", -room.w / 2, 1))
+        else:
+            room.layout.append(Block(self, -13, 0, 4, 22))
+
+        if room.ed:
+            room.layout.append(Block(self, 13, -6, 4, 10))
+            room.layout.append(Block(self, 13, 6, 4, 10))
+            room.entities.append(Entity(self, "barricade", room.w / 2, -1))
+            room.entities.append(Entity(self, "barricade", room.w / 2, 0))
+            room.entities.append(Entity(self, "barricade", room.w / 2, 1))
+        else:
+            room.layout.append(Block(self, 13, 0, 4, 22))
+
+
+        for i in range(20):
+            ex = random.randint(-10, 10)
+            ey = random.randint(-10, 10)
+            eid = random.choice(("spider", "explosive_spider"))
+            room.entities.append(Entity(self, eid, ex, ey))
 
 
         return room
@@ -634,8 +746,15 @@ class Item:
         self.timer = self.delay
         return getattr(self, f"apply_{self.id}", self.apply_null)(point)
 
+    def dapply(self, point : tuple[float, float]):
+        if self.timer > 0: return
+        self.timer = self.delay
+        return getattr(self, f"dapply_{self.id}", self.dapply_null)(point)
+
 
     def apply_null(self, point : tuple[float, float]):
+        return
+    def dapply_null(self, point : tuple[float, float]):
         return
 
     def apply_shotgun(self, point : tuple[float, float]):
@@ -646,7 +765,7 @@ class Item:
         shotY = self.arena.player.y + math.sin(angle)
 
         self.arena.flash(shotX, shotY, 120, FRAMERATE // 4)
-        self.arena.player.knockback(0.25, (angle + math.pi) * 180 / math.pi, FRAMERATE // 8)
+        self.arena.player.knockback(0.15, (angle + math.pi) * 180 / math.pi, FRAMERATE // 8)
         self.arena.camera.shake(0.2, FRAMERATE // 8)
         self.arena.player.hitstun(FRAMERATE // 4)
 
@@ -672,6 +791,29 @@ class Item:
 
         return
 
+    def dapply_machine_gun(self, point : tuple[float, float]):
+        angle = math.atan2(
+            self.arena.player.y - point[1], self.arena.player.x - point[0],
+        ) + math.pi
+        shotX = self.arena.player.x + math.cos(angle)
+        shotY = self.arena.player.y + math.sin(angle)
+
+        self.arena.flash(shotX, shotY, 120, FRAMERATE // 4)
+        self.arena.player.knockback(0.01, (angle + math.pi) * 180 / math.pi, FRAMERATE // 8)
+        self.arena.camera.shake(0.05, FRAMERATE // 8)
+        self.arena.player.hitstun(FRAMERATE // 8)
+
+        inaccuracy = random.randint(-9, 9)
+
+        self.arena.newEntity(
+            "bullet",
+            self.arena.player.x + math.cos(angle),
+            self.arena.player.y + math.sin(angle),
+            angle = angle * 180 / math.pi + inaccuracy,
+            velocity = 0.45,
+            duration = FRAMERATE,
+        )
+
 
 
 class Entity:
@@ -692,6 +834,7 @@ class Entity:
         self.damageable : bool = self._data.get("damage", True)
         self.interactable : bool = self._data.get("interact", False)
         self.temporary : bool = self._data.get("temporary", False)
+        self.opponent : bool = self._data.get("opponent", False)
 
         self.kb : int = 0
         self.kbangle : int = 0
@@ -839,11 +982,13 @@ class Entity:
                         self.y + 0.25 * math.sin(angle / 180 * math.pi),
                         angle = angle,
                         velocity = 0.45,
-                        duration = FRAMERATE,
+                        duration = FRAMERATE // 4,
                     )
                 self.destroyTimer = FRAMERATE# // 2
 
     def animate_explosive_spider(self):
+        if not "timer" in self.meta.keys():
+            self.meta["timer"] = 0
         if self.meta["timer"] > 0:
             return "entity_explosive_spider_fuse"
         else:
@@ -898,17 +1043,22 @@ class Entity:
         self.x += self.meta.get("velocity", 0.15) * math.cos(self.meta.get("angle", 0) / 180 * math.pi)
         self.y += self.meta.get("velocity", 0.15) * math.sin(self.meta.get("angle", 0) / 180 * math.pi)
 
+        self.arena.newParticle(
+            f"flame{random.randint(0, 2)}",
+            self.x, self.y, 0, 0, self.meta.get("duration", FRAMERATE // 4) // 8,
+        )
+
         for entity in self.arena.player.getRoom().entities:
             if not entity.damageable: continue
             if math.sqrt((self.x - entity.x) ** 2 + (self.y - entity.y) ** 2) <= (entity.w + entity.h) / 2:
-                entity.damage(3)
-                entity.knockback(0.35, self.meta.get("angle", 0), FRAMERATE // 8)
+                entity.damage(2)
+                entity.knockback(0.25, self.meta.get("angle", 0), FRAMERATE // 8)
                 self.destroy = True
 
         distance = math.sqrt((self.x - self.arena.player.x) ** 2 + (self.y - self.arena.player.y) ** 2)
         if distance <= (self.arena.player.w + self.arena.player.h) / 2:
-            self.arena.player.damage(3)
-            self.arena.player.knockback(0.35, self.meta.get("angle", 0), FRAMERATE // 8)
+            self.arena.player.damage(2)
+            self.arena.player.knockback(0.25, self.meta.get("angle", 0), FRAMERATE // 8)
             self.destroy = True
 
         if self.timer >= self.meta.get("duration", FRAMERATE // 4):
@@ -966,6 +1116,25 @@ class Entity:
             return "entity_methane_can"
 
 
+    def damage_barricade(self, amount : int):
+        return 0
+
+    def tick_barricade(self):
+        if self.arena.countOpponents() == 0:
+            self.destroy = True
+
+        angle = math.atan2(
+            self.y - self.arena.player.y, self.x - self.arena.player.x,
+        ) + math.pi
+        distance = math.sqrt(
+            (self.x - self.arena.player.x) ** 2 + (self.y - self.arena.player.y) ** 2,
+        )
+
+        if distance <= (self.arena.player.w + self.arena.player.h) / 2:
+            self.arena.player.knockback(0.45, angle * 180 / math.pi, FRAMERATE // 3)
+            self.arena.player.hitstun(FRAMERATE // 3)
+
+
     def tick_item(self):
         if not "base" in self.meta.keys():
             self.meta["base"] = self.y
@@ -990,3 +1159,16 @@ class Entity:
             self.arena.player.item = Item(self.arena, self.meta["item_id"])
 
         return
+
+
+    def damage_dungeon_chest(self, amount : int):
+        return 0
+
+    def tick_dungeon_chest(self):
+        if self.arena.countOpponents() == 0:
+            for e in range(random.randint(1, 7)):
+                angle = random.randint(0, 359) / 180 * math.pi
+                self.arena.newEntity(
+                    "item",
+                )
+            self.destroy = True

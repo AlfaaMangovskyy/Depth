@@ -6,5 +6,9 @@
     "shotgun": {
         "name": "Shotgun",
         "delay": 20
+    },
+    "machine_gun": {
+        "name": "Machine Gun",
+        "delay": 5
     }
 }
