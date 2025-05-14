@@ -296,7 +296,7 @@ class Arena:
 
         chance = random.randint(1, 100)
 
-        if chance <= 55:
+        if chance <= 75:
             room = self.generateRoomPassage(rx, ry)
         else:
             room = self.generateRoomDungeon(rx, ry)
