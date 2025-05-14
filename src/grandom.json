@@ -1,0 +1,42 @@
+{
+    "spawns": {
+        "dungeon": [
+            {
+                "id": "spider",
+                "rolls": 4
+            },
+            {
+                "id": "explosive_spider",
+                "rolls": 1
+            }
+        ]
+    },
+    "loot": {
+        "dungeon": [
+            {
+                "id": "shotgun",
+                "rolls": 2
+            },
+            {
+                "id": "machine_gun",
+                "rolls": 2
+            },
+            {
+                "id": "turret",
+                "rolls": 1
+            },
+            {
+                "id": "rocket_launcher",
+                "rolls": 1
+            },
+            {
+                "id": "grenade",
+                "rolls": 3
+            },
+            {
+                "id": "bandage",
+                "rolls": 2
+            }
+        ]
+    }
+}

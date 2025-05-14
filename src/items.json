@@ -1,14 +1,56 @@
 {
     "sword": {
         "name": "Sword",
+        "type": "WHITE",
+        "delay": 15
+    },
+    "aura_blade": {
+        "name": "Aura Blade",
+        "type": "WHITE",
         "delay": 15
     },
     "shotgun": {
         "name": "Shotgun",
+        "type": "SHOOTER",
+        "max_ammo": 5,
+        "reload_time": 30,
+        "auto": false,
         "delay": 20
     },
     "machine_gun": {
         "name": "Machine Gun",
+        "type": "SHOOTER",
+        "max_ammo": 20,
+        "reload_time": 60,
+        "auto": true,
         "delay": 5
+    },
+    "rocket_launcher": {
+        "name": "Rocket Launcher",
+        "type": "SHOOTER",
+        "max_ammo": 3,
+        "reload_time": 120,
+        "auto": true,
+        "delay": 30
+    },
+    "grenade": {
+        "name": "Grenade",
+        "type": "CONSUME",
+        "delay": 60
+    },
+    "bandage": {
+        "name": "Bandage",
+        "type": "CONSUME",
+        "delay": 60
+    },
+    "turret": {
+        "name": "Turret",
+        "type": "CONSUME",
+        "delay": 60
+    },
+    "methane_can": {
+        "name": "Turret",
+        "type": "CONSUME",
+        "delay": 60
     }
 }

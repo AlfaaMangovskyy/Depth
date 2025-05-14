@@ -49,6 +49,11 @@ while running:
                 pygame.quit()
                 break
 
+            elif e.key == pygame.K_r:
+                if arena.player.item:
+                    if arena.player.item.type == "SHOOTER":
+                        arena.player.item.reload()
+
         if e.type == pygame.MOUSEBUTTONDOWN:
 
             if e.button == 1:
@@ -72,6 +77,7 @@ while running:
                     if entity.x - entity.w / 2 <= point[0] <= entity.x + entity.w / 2:
                         if entity.y - entity.h / 2 <= point[1] <= entity.y + entity.h / 2:
                             entity.interact()
+                            break
 
         if e.type == pygame.MOUSEBUTTONUP:
 
@@ -218,7 +224,7 @@ while running:
 
     for entity in arena.player.getRoom().entities:
 
-        key = entity.animate()
+        key, angle = entity.animate()
 
         # print(entity.id, entity.destroyTimer) #
         if entity.destroyTimer > FRAMERATE // 2:
@@ -255,7 +261,10 @@ while running:
             )
             continue
 
-        img = IMAGES.get(key)
+        # print(key) #
+        img = IMAGES.get(key).copy()
+        if angle != 0:
+            img = pygame.transform.rotate(img, angle)
         screen.blit(
             img, (
                 (entity.x - camX) * arena.scale + WIDTH // 2 - img.get_width() // 2,
@@ -386,6 +395,31 @@ while running:
             mouseY - img.get_height() // 2,
         )
     )
+
+
+    heart = IMAGES.get("heart_icon")
+    total = arena.player.hp * heart.get_width()
+    for i in range(arena.player.hp):
+        screen.blit(
+            heart, (
+                WIDTH // 2 - total // 2 + i * heart.get_width(),
+                HEIGHT - 20 - heart.get_height(),
+            )
+        )
+
+    if arena.player.item:
+        # print(arena.player.item.id, arena.player.item.max_ammo, arena.player.item.ammo) #
+        if arena.player.item.type == "SHOOTER":
+            ammo = IMAGES.get("bullet_icon")
+            ammo_used = IMAGES.get("bullet_used_icon")
+            total = arena.player.item.max_ammo * ammo.get_width()
+            for i in range(arena.player.item.max_ammo):
+                screen.blit(
+                    ammo if i < arena.player.item.ammo else ammo_used, (
+                        WIDTH // 2 - total // 2 + i * ammo.get_width(),
+                        HEIGHT - 40 - heart.get_height() - ammo.get_height(),
+                    )
+                )
 
 
 
