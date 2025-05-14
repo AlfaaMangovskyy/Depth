@@ -12,6 +12,28 @@
         ]
     },
     "loot": {
+        "ground": [
+            {
+                "id": "sword",
+                "rolls": 3
+            },
+            {
+                "id": "shotgun",
+                "rolls": 1
+            },
+            {
+                "id": "grenade",
+                "rolls": 1
+            },
+            {
+                "id": "machine_gun",
+                "rolls": 1
+            },
+            {
+                "id": "bandage",
+                "rolls": 1
+            }
+        ],
         "dungeon": [
             {
                 "id": "shotgun",
@@ -32,6 +54,14 @@
             {
                 "id": "grenade",
                 "rolls": 3
+            },
+            {
+                "id": "sword",
+                "rolls": 3
+            },
+            {
+                "id": "aura_blade",
+                "rolls": 1
             },
             {
                 "id": "bandage",

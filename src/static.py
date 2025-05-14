@@ -100,6 +100,7 @@ class Arena:
             [
                 self.loadEntity(entity) for entity in roomData.get("entities", [])
             ], [],
+            roomData.get("type"),
             roomData.get("entrances"),
         )
         return room
@@ -117,6 +118,7 @@ class Arena:
             "entities": [
                 self.saveEntity(entity) for entity in room.entities
             ],
+            "type": room.type,
             "entrances": [room.ew, room.ea, room.es, room.ed],
         }
 
@@ -198,6 +200,12 @@ class Arena:
         count = 0
         for entity in self.player.getRoom().entities:
             if entity.opponent: count += 1
+        return count
+
+    def countEntity(self, _id : str) -> int:
+        count = 0
+        for entity in self.player.getRoom().entities:
+            if entity.id == _id: count += 1
         return count
 
     def tick(self):
@@ -288,7 +296,7 @@ class Arena:
 
         chance = random.randint(1, 100)
 
-        if chance <= 75:
+        if chance <= 55:
             room = self.generateRoomPassage(rx, ry)
         else:
             room = self.generateRoomDungeon(rx, ry)
@@ -302,6 +310,7 @@ class Arena:
             rx, ry,
             20, 20,
             [], [], [],
+            "passage",
         )
 
         room.layout.append(Block(self, -8, -8, 4, 4))
@@ -380,6 +389,16 @@ class Arena:
         if random.randint(1, 3) == 1:
             room.layout.append(Block(self, 0, 0, 3, 3))
 
+        if random.randint(1, 2) == 1:
+            items = random.randint(1, 3)
+            for i in range(items):
+                ix = random.randint(2, 5) * random.choice((1, -1))
+                iy = random.randint(2, 5) * random.choice((1, -1))
+                iid = rollGeneration(RANDOMDATA.get("loot").get("ground"))
+                room.entities.append(Entity(
+                    self, "item", ix, iy, item_id = iid,
+                ))
+
 
         return room
 
@@ -391,6 +410,7 @@ class Arena:
             rx, ry,
             30, 30,
             [], [], [],
+            "dungeon",
         )
 
         room.layout.append(Block(self, -13, -13, 4, 4))
@@ -514,6 +534,7 @@ class Room:
         layout : list,
         entities : list,
         particles : list,
+        _type : str = "DEBUG",
         entrances : tuple[bool, bool, bool, bool] = (False, False, False, False),
     ):
         self.arena = arena
@@ -524,6 +545,8 @@ class Room:
         self.particles : list[Particle] = particles
         self.light : list[Light] = []
 
+        self.type : str = _type
+
         self.ew, self.ea, self.es, self.ed = entrances
 
     def tick(self):
@@ -533,8 +556,20 @@ class Room:
                 if entity.destroyTimer == 0:
                     self.entities.remove(entity)
                     del entity
+                    continue
+
+            if entity.x - entity.w / 2 < -self.w / 2:
+                entity.x = -self.w / 2 + entity.w / 2
+            if entity.x + entity.w / 2 > self.w / 2:
+                entity.x = self.w / 2 - entity.w / 2
+            if entity.y - entity.h / 2 < -self.h / 2:
+                entity.y = -self.h / 2 + entity.h / 2
+            if entity.y + entity.h / 2 > self.h / 2:
+                entity.y = self.h / 2 - entity.h / 2
+
         for light in self.light:
             light.tick()
+
         for particle in self.particles:
             particle.tick()
             if particle.destroy:
@@ -782,6 +817,8 @@ class Item:
 
         self.timer : int = 0
 
+        self.equip()
+
     def tick(self):
         if self.timer > 0:
             self.timer -= 1
@@ -789,6 +826,11 @@ class Item:
             self.reloads -= 1
             if self.reloads == 0:
                 self.ammo = self.max_ammo
+
+        return getattr(self, f"tick_{self.id}", self.tick_null)()
+
+    def tick_null(self):
+        return
 
     def reload(self):
         if self.reloads > 0: return
@@ -809,6 +851,11 @@ class Item:
             self.ammo -= 1
 
         return getattr(self, f"apply_{self.id}", self.apply_null)(point)
+
+    def equip(self):
+        return getattr(self, f"equip_{self.id}", self.equip_null)()
+    def equip_null(self):
+        return
 
     def dapply(self, point : tuple[float, float]):
         if self.timer > 0: return
@@ -946,6 +993,53 @@ class Item:
             duration = FRAMERATE,
         )
 
+
+    def equip_aura_blade(self):
+        for e in range(9):
+            angle = (360 // 9) * e
+            self.arena.newEntity(
+                "aura_wisp",
+                self.arena.player.x + 1.75 * math.cos(angle / 180 * math.pi),
+                self.arena.player.y + 1.75 * math.sin(angle / 180 * math.pi),
+                angle = angle,
+            )
+
+    def tick_aura_blade(self):
+        if self.arena.countEntity("aura_wisp") < 9:
+            for e in range(9):
+                angle = (360 // 9) * e
+                self.arena.newEntity(
+                    "aura_wisp",
+                    self.arena.player.x + 1.75 * math.cos(angle / 180 * math.pi),
+                    self.arena.player.y + 1.75 * math.sin(angle / 180 * math.pi),
+                    angle = angle,
+                )
+
+    def apply_sword(self, point : tuple[float, float]):
+        angle = math.atan2(
+            self.arena.player.y - point[1], self.arena.player.x - point[0],
+        ) * 180 / math.pi + 180
+        self.arena.newEntity(
+            "dagger",
+            self.arena.player.x,
+            self.arena.player.y,
+            angle = angle,
+            velocity = 0.45,
+            duration = FRAMERATE // 8,
+        )
+
+    def apply_aura_blade(self, point : tuple[float, float]):
+        angle = math.atan2(
+            self.arena.player.y - point[1], self.arena.player.x - point[0],
+        ) * 180 / math.pi + 180
+        self.arena.newEntity(
+            "dagger",
+            self.arena.player.x,
+            self.arena.player.y,
+            angle = angle,
+            velocity = 0.45,
+            duration = FRAMERATE // 8,
+        )
 
 
 class Entity:
@@ -1185,6 +1279,33 @@ class Entity:
 
     def animate_bullet(self):
         return "entity_bullet", self.meta.get("angle", 0)
+
+
+    def tick_dagger(self):
+        self.x += self.meta.get("velocity", 0.15) * math.cos(self.meta.get("angle", 0) / 180 * math.pi)
+        self.y += self.meta.get("velocity", 0.15) * math.sin(self.meta.get("angle", 0) / 180 * math.pi)
+
+        for entity in self.arena.player.getRoom().entities:
+            if not entity.ghostlike: continue
+            if math.sqrt((self.x - entity.x) ** 2 + (self.y - entity.y) ** 2) <= (entity.w + entity.h) / 2:
+                entity.damage(2, self.meta.get("angle", 0))
+                entity.knockback(0.35, self.meta.get("angle", 0), FRAMERATE // 8)
+                # self.destroy = True #
+
+        if self.timer >= self.meta.get("duration", FRAMERATE // 4):
+            self.destroy = True
+
+        for block in self.arena.player.getRoom().layout:
+            if block.x - block.w / 2 < self.x < block.x + block.w / 2:
+                if block.y - block.h / 2 < self.y < block.y + block.h / 2:
+                    self.destroy = True
+                    break
+
+    def damage_dagger(self, amount : int):
+        return 0
+
+    def animate_dagger(self):
+        return "dagger", -(self.meta.get("angle", 0) + 90)
 
 
     def tick_flameball(self):
@@ -1522,3 +1643,36 @@ class Entity:
 
     def animate_rocket(self):
         return "entity_rocket", self.meta.get("angle", 0)
+
+
+    def damage_aura_wisp(self, amount : int):
+        return 0
+
+    def tick_aura_wisp(self):
+        if not "angle" in self.meta.keys():
+            self.meta["angle"] = 0
+
+        if not self.arena.player.item:
+            self.destroy = True
+            return
+        if self.arena.player.item.id != "aura_blade":
+            self.destroy = True
+            return
+
+        self.meta["angle"] += 3
+        if self.meta["angle"] > 360:
+            self.meta["angle"] -= 360
+
+        self.x = self.arena.player.x + 1.75 * math.cos(self.meta["angle"] / 180 * math.pi)
+        self.y = self.arena.player.y + 1.75 * math.sin(self.meta["angle"] / 180 * math.pi)
+
+
+        for entity in self.arena.player.getRoom().entities:
+            if not entity.opponent: continue
+            distance = math.sqrt((entity.x - self.x) ** 2 + (entity.y - self.y) ** 2)
+            if distance > (entity.w + entity.h) / 2: continue
+            angle = math.atan2(
+                self.arena.player.y - entity.y, self.arena.player.x - entity.x,
+            ) * 180 / math.pi
+            entity.damage(1, angle)
+            entity.knockback(0.25, angle + 180, FRAMERATE // 4)

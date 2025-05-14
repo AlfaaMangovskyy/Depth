@@ -20,6 +20,13 @@
         "w": 0.25,
         "h": 0.25
     },
+    "dagger": {
+        "name": "Dagger",
+        "ghost": false,
+        "temporary": true,
+        "w": 0.75,
+        "h": 0.75
+    },
     "web": {
         "name": "Web",
         "ghost": false,
@@ -29,6 +36,14 @@
     },
     "flameball": {
         "name": "Flameball",
+        "ghost": false,
+        "temporary": true,
+        "w": 0.50,
+        "h": 0.50
+    },
+    "aura_wisp": {
+        "name": "Aura Wisp",
+        "immune": true,
         "ghost": false,
         "temporary": true,
         "w": 0.50,

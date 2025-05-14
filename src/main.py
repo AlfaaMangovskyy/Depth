@@ -422,6 +422,77 @@ while running:
                 )
 
 
+    for dx in range(-2, 2 + 1, 1):
+        for dy in range(-2, 2 + 1, 1):
+            mx = arena.player.rx + dx
+            my = arena.player.ry + dy
+
+            room = arena.getRoom(mx, my)
+            if not room:
+                img = IMAGES.get("map_null")
+            else:
+                img = IMAGES.get(f"map_{room.type}")
+                if not img:
+                    img = IMAGES.get("map_null")
+
+            bx = 25 + (dx + 2) * 50
+            by = HEIGHT - (25 + 50 * 5) + (dy + 2) * 50
+
+            screen.blit(
+                img, (bx, by)
+            )
+
+            if room:
+                if room.ew:
+                    pygame.draw.line(
+                        screen, "#7F7F7F",
+                        (
+                            bx + 20,
+                            by ,
+                        ),
+                        (
+                            bx + 20,
+                            by - 5,
+                        ), 5,
+                    )
+                if room.es:
+                    pygame.draw.line(
+                        screen, "#7F7F7F",
+                        (
+                            bx + 20,
+                            by + 40,
+                        ),
+                        (
+                            bx + 20,
+                            by + 40 + 5,
+                        ), 5,
+                    )
+                if room.ea:
+                    pygame.draw.line(
+                        screen, "#7F7F7F",
+                        (
+                            bx ,
+                            by + 20,
+                        ),
+                        (
+                            bx - 5,
+                            by + 20,
+                        ), 5,
+                    )
+                if room.ed:
+                    pygame.draw.line(
+                        screen, "#7F7F7F",
+                        (
+                            bx + 40,
+                            by + 20,
+                        ),
+                        (
+                            bx + 40 + 5,
+                            by + 20,
+                        ), 5,
+                    )
+
+
 
     if DEBUG:
 
